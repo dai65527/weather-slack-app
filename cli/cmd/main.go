@@ -4,7 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"weather-slack-app/weather"
+
+	"github.com/dai65527/weather-slack-app/weather"
 )
 
 func main() {

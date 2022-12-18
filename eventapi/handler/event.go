@@ -5,12 +5,13 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/dai65527/weather-slack-app/slackhandler"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 )
 
 type EventHandler struct {
-	SlackClient   *slack.Client
+	SlackHandler  *slackhandler.SlackHandler
 	SigningSecret string
 }
 
@@ -56,46 +57,9 @@ func (h *EventHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if event.Type == slackevents.CallbackEvent {
-		innerEvent := event.InnerEvent
-		switch ev := innerEvent.Data.(type) {
-		// SlackAppがメンションされた時に発火
-		case *slackevents.AppMentionEvent:
-			_, _, err := h.SlackClient.PostMessage(ev.Channel, slack.MsgOptionBlocks(
-				slack.SectionBlock{
-					Type: slack.MBTSection,
-					Text: &slack.TextBlockObject{
-						Type: slack.PlainTextType,
-						Text: "どの都市の天気を調べますか？",
-					},
-					Accessory: &slack.Accessory{
-						SelectElement: &slack.SelectBlockElement{
-							ActionID: "select_city",
-							Type:     slack.OptTypeStatic,
-							Placeholder: &slack.TextBlockObject{
-								Type: slack.PlainTextType,
-								Text: "都市を選択",
-							},
-							Options: []*slack.OptionBlockObject{
-								{Text: &slack.TextBlockObject{Type: slack.PlainTextType, Text: "東京"}, Value: "東京"},
-								{Text: &slack.TextBlockObject{Type: slack.PlainTextType, Text: "ソウル"}, Value: "ソウル"},
-								{Text: &slack.TextBlockObject{Type: slack.PlainTextType, Text: "北京"}, Value: "北京"},
-								{Text: &slack.TextBlockObject{Type: slack.PlainTextType, Text: "シドニー"}, Value: "シドニー"},
-								{Text: &slack.TextBlockObject{Type: slack.PlainTextType, Text: "パリ"}, Value: "パリ"},
-								{Text: &slack.TextBlockObject{Type: slack.PlainTextType, Text: "ロンドン"}, Value: "ロンドン"},
-								{Text: &slack.TextBlockObject{Type: slack.PlainTextType, Text: "ベルリン"}, Value: "ベルリン"},
-								{Text: &slack.TextBlockObject{Type: slack.PlainTextType, Text: "ニューヨーク"}, Value: "ニューヨーク"},
-								{Text: &slack.TextBlockObject{Type: slack.PlainTextType, Text: "ロサンゼルス"}, Value: "ロサンゼルス"},
-							},
-						},
-					},
-				},
-			))
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-		default:
-			w.WriteHeader(http.StatusBadRequest)
+		err := h.SlackHandler.HandleCallBackEvent(event)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/dai65527/weather-slack-app/eventapi/handler"
+	"github.com/dai65527/weather-slack-app/slackhandler"
 	"github.com/slack-go/slack"
 )
 
@@ -12,15 +13,19 @@ func main() {
 	oauthToken := os.Getenv("SLACK_OAUTH_TOKEN")
 	signingSecret := os.Getenv("SLACK_SIGNING_SECRET")
 
-	slackClient := slack.New(oauthToken)
+	api := slack.New(oauthToken)
+
+	slackHandler := slackhandler.SlackHandler{
+		Api: api,
+	}
 
 	http.Handle("/slack/events", &handler.EventHandler{
-		SlackClient:   slackClient,
+		SlackHandler:  &slackHandler,
 		SigningSecret: signingSecret,
 	})
 
 	http.Handle("/slack/interaction", &handler.InteractivityHandler{
-		SlackClient: slackClient,
+		SlackHandler: &slackHandler,
 	})
 
 	http.ListenAndServe(":8080", nil)

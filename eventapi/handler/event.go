@@ -11,7 +11,6 @@ import (
 
 type EventHandler struct {
 	SlackClient   *slack.Client
-	OauthToken    string
 	SigningSecret string
 }
 

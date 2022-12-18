@@ -16,8 +16,11 @@ func main() {
 
 	http.Handle("/slack/events", &handler.EventHandler{
 		SlackClient:   slackClient,
-		OauthToken:    oauthToken,
 		SigningSecret: signingSecret,
+	})
+
+	http.Handle("/slack/interaction", &handler.InteractivityHandler{
+		SlackClient: slackClient,
 	})
 
 	http.ListenAndServe(":8080", nil)
